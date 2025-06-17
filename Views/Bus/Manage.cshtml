@@ -1,0 +1,210 @@
+﻿@model U24698505__HW01.Models.RescueBus
+
+@{
+    ViewBag.Title = "Manage";
+}
+
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Driver and Vehicle Management</h2>
+
+    <!-- DRIVERS -->
+    <div class="card p-4 mb-5 shadow-sm">
+        <h4>Drivers</h4>
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <input id="searchName" class="form-control" placeholder="Driver Name" />
+            </div>
+            <div class="col-md-4">
+                <select id="searchService" class="form-select">
+                    <option value="">Service</option>
+                    <option>ALS (Advanced Life Support)</option>
+                    <option>BLS (Basic Life Support)</option>
+                    <option>Patient Transport</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button class="btn btn-success w-100" onclick="searchDrivers()">Search</button>
+            </div>
+        </div>
+
+        <table class="table table-bordered align-middle text-center">
+            <thead class="table-light">
+                <tr>
+                    <th>IMAGE</th>
+                    <th>FIRST NAME</th>
+                    <th>LAST NAME</th>
+                    <th>PHONE NUMBER</th>
+                    <th>SERVICE</th>
+                    <th>Controls</th>
+                </tr>
+            </thead>
+            <tbody id="driverTable">
+                <!-- Driver rows injected by JS -->
+            </tbody>
+        </table>
+        <!-- Change this line -->
+        <button class="btn btn-primary" onclick="createDriver()">Create</button>
+
+    </div>
+
+    <!-- VEHICLES -->
+    <div class="card p-4 shadow-sm">
+        <h4>Vehicles</h4>
+        <table class="table table-bordered align-middle text-center">
+            <thead class="table-light">
+                <tr>
+                    <th>IMAGE</th>
+                    <th>TYPE</th>
+                    <th>REGISTRATION</th>
+                    <th>SERVICE</th>
+                    <th>Controls</th>
+                </tr>
+            </thead>
+            <tbody id="vehicleTable">
+                <!-- Vehicle rows injected by JS -->
+            </tbody>
+        </table>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary">Create</button>
+            <button class="btn btn-success" onclick="exportVehicles()">Export</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const drivers = [
+        { image: "https://via.placeholder.com/40", firstName: "Brad", lastName: "Simmons", phone: "+27 76 567 7864", service: "ALS (Advanced Life Support)" },
+        { image: "https://via.placeholder.com/40", firstName: "Jessica", lastName: "Clarkson", phone: "+27 76 567 7864", service: "ALS (Advanced Life Support)" },
+        { image: "https://via.placeholder.com/40", firstName: "Lebo", lastName: "Mokoena", phone: "+27 61 123 4567", service: "BLS (Basic Life Support)" },
+        { image: "https://via.placeholder.com/40", firstName: "Dineo", lastName: "Nkosi", phone: "+27 71 987 6543", service: "Patient Transport" }
+        // Add more demo drivers
+    ];
+
+    const vehicles = [
+        { image: "https://via.placeholder.com/40", type: "Type 1", reg: "###111", service: "ALS (Advanced Life Support)" },
+        { image: "https://via.placeholder.com/40", type: "Type 2", reg: "###222", service: "ALS (Advanced Life Support)" },
+        { image: "https://via.placeholder.com/40", type: "BLS Van", reg: "BLS123", service: "BLS (Basic Life Support)" }
+        // Add more demo vehicles
+    ];
+
+    function createDriver() {
+        const firstName = prompt("Enter first name:");
+        const lastName = prompt("Enter last name:");
+        const phone = prompt("Enter phone number:");
+        const service = prompt("Enter service (ALS, BLS, or Patient Transport):");
+
+        if (firstName && lastName && phone && service) {
+            drivers.push({
+                image: "https://via.placeholder.com/40",
+                firstName,
+                lastName,
+                phone,
+                service
+            });
+            loadTables();
+        }
+    }
+
+
+    function loadTables() {
+        const driverBody = document.getElementById("driverTable");
+        const vehicleBody = document.getElementById("vehicleTable");
+        driverBody.innerHTML = "";
+        vehicleBody.innerHTML = "";
+
+        drivers.forEach((d, i) => {
+            driverBody.innerHTML += `
+        <tr>
+            <td><img src="${d.image}" width="40" /></td>
+            <td>${d.firstName}</td>
+            <td>${d.lastName}</td>
+            <td>${d.phone}</td>
+            <td>${d.service}</td>
+            <td>
+                <button class="btn btn-warning btn-sm" onclick="updateDriver(${i})">Update</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteDriver(${i})">Delete</button>
+            </td>
+        </tr>`;
+        });
+
+
+        vehicles.forEach(v => {
+            vehicleBody.innerHTML += `
+                <tr>
+                    <td><img src="${v.image}" width="40" /></td>
+                    <td>${v.type}</td>
+                    <td>${v.reg}</td>
+                    <td>${v.service}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm">Update</button>
+                        <button class="btn btn-danger btn-sm">Delete</button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    function updateDriver(index) {
+        const d = drivers[index];
+        const firstName = prompt("Edit first name:", d.firstName);
+        const lastName = prompt("Edit last name:", d.lastName);
+        const phone = prompt("Edit phone number:", d.phone);
+        const service = prompt("Edit service:", d.service);
+
+        if (firstName && lastName && phone && service) {
+            drivers[index] = { ...d, firstName, lastName, phone, service };
+            loadTables();
+        }
+    }
+
+    function deleteDriver(index) {
+        if (confirm("Are you sure you want to delete this driver?")) {
+            drivers.splice(index, 1);
+            loadTables();
+        }
+    }
+    function searchDrivers() {
+        const name = document.getElementById("searchName").value.toLowerCase();
+        const service = document.getElementById("searchService").value;
+        const driverBody = document.getElementById("driverTable");
+
+        const filtered = drivers.filter(d =>
+            (name === "" || d.firstName.toLowerCase().includes(name)) &&
+            (service === "" || d.service === service)
+        );
+
+        driverBody.innerHTML = "";
+        filtered.forEach(d => {
+            driverBody.innerHTML += `
+                <tr>
+                    <td><img src="${d.image}" width="40" /></td>
+                    <td>${d.firstName}</td>
+                    <td>${d.lastName}</td>
+                    <td>${d.phone}</td>
+                    <td>${d.service}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm">Update</button>
+                        <button class="btn btn-danger btn-sm">Delete</button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    function exportVehicles() {
+        let text = "Type\tRegistration\tService\n";
+        vehicles.forEach(v => {
+            text += `${v.type}\t${v.reg}\t${v.service}\n`;
+        });
+
+        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "vehicles.txt";
+        a.click();
+    }
+
+    loadTables(); // Load on page load
+</script>
+

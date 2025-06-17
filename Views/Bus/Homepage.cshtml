@@ -1,0 +1,40 @@
+﻿@model U24698505__HW01.Models.RescueBus
+
+@{
+    ViewBag.Title = "Homepage";
+}
+
+
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6 grid-cell bg-light">
+            <div>
+                <h2 class="fw-bold" style=" color:mediumpurple">A real top notch team here to try to save you</h2>
+                <p class="text-muted">We prioritise patient safety and lives. No patient left behind!</p>
+                <a href="@Url.Action("SelectService","Bus")" class="btn btn-primary btn-lg mt-3">Book Ambulance</a>
+            </div>
+        </div>
+        <div class="col-md-6 grid-cell bg-white">
+            <img src="~/Content/Images/hospital.jpg" alt="Placeholder" class="img-fluid banner-img" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 grid-cell bg-light">
+            <div>
+                <h3 class="fw-bold" style="color:blueviolet">EMERGENCY?</h3>
+                <p class="text-muted text-small">
+                    Only hit the SOS button on the right for <strong>real</strong> emergencies mind you<br />
+                    If it is a minor case, please press the booking button above
+                </p>
+            </div>
+        </div>
+        <div class="col-md-6 grid-cell bg-white">
+            <a href="@Url.Action("Emergency", "Home")">
+                <img src="~/Content/Images/SOS.png" alt="S.O.S." class="sos-img" />
+            </a>
+        </div>
+    </div>
+</div>

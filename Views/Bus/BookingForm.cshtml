@@ -1,0 +1,155 @@
+﻿@model U24698505__HW01.Models.RescueBus
+
+@{
+    ViewBag.Title = "BookingForm";
+    string service = ViewBag.ServiceType as string;
+}
+
+<h2>BookingForm</h2>
+
+<link href="~/Content/BookStyle.css" rel="stylesheet" />
+
+<div class="container py-5">
+    <div class="text-center mb-4">
+        <img src="~/Content/Images/Ambulance.png" alt="Ambulance Icon" style="width: 60px;" />
+        <h3 class="section-title">@service</h3>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <form id="bookingForm" class="booking-card">
+                <div class="mb-3">
+                    <label>Full Name*</label>
+                    <input name="FullName" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label>Phone*</label>
+                    <input name="Phone" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label>Pick-Up Time*</label>
+                    <input name="PickUpTime" type="time" class="form-control" required />
+                </div>
+
+                <div class="mb-3">
+                    <label>Reason*</label>
+                    <select name="Reason" class="form-select" required>
+                        <option value="">Choose reason</option>
+                        <option>Accident</option>
+                        <option>Medical Emergency</option>
+                        <option>Hospital Visit</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label>Vehicle*</label>
+                    <select id="vehicleSelect" name="Vehicle" class="form-select" required>
+                        <option value="">Select Vehicle</option>
+
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label>Driver*</label>
+                    <select id="driverSelect" name="Driver" class="form-select" required>
+                        <option value="">Select Driver</option>
+
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label>Pick-Up Address*</label>
+                    <textarea name="PickUpAddress" class="form-control" rows="2" required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-green w-100">BOOK AMBULANCE</button>
+                <p class="form-note">Fields marked with * are required</p>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const service = "@ViewBag.ServiceType";
+
+        const data = {
+            "ALS (Advances Life Support)": {
+                vehicles: ["ALS Type 1", "ALS Type 2"],
+                drivers: ["Driver A", "Driver B"]
+            },
+            "BLS (Basic Life Support)": {
+                vehicles: ["BLS Van 1"],
+                drivers: ["Driver C"]
+            },
+            "Patient Transport": {
+                vehicles: ["Transport Van 1"],
+                drivers: ["Driver D"]
+            },
+            "Medical Utility Vehicle": {
+                vehicles: ["Utility Van 1"],
+                drivers: ["Driver E"]
+            },
+            "Event Medical Ambulance": {
+                vehicles: ["Event Amb 1"],
+                drivers: ["Driver F"]
+            },
+            "Air ambulance": {
+                vehicles: ["Air Ambulance 1"],
+                drivers: ["Pilot G"]
+            }
+        };
+
+        const vehicleSelect = document.getElementById("vehicleSelect");
+        const driverSelect = document.getElementById("driverSelect");
+
+        if (data[service]) {
+            // Clear default options
+            vehicleSelect.innerHTML = `<option value="">Select Vehicle</option>`;
+            driverSelect.innerHTML = `<option value="">Select Driver</option>`;
+
+            data[service].vehicles.forEach(v => {
+                vehicleSelect.innerHTML += `<option value="${v}">${v}</option>`;
+            });
+            data[service].drivers.forEach(d => {
+                driverSelect.innerHTML += `<option value="${d}">${d}</option>`;
+            });
+        }
+
+        // Handle booking form submission
+        document.getElementById("bookingForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const booking = {
+                BookingID: generateGUID(),
+                FullName: formData.get("FullName"),
+                Phone: formData.get("Phone"),
+                PickUpTime: formData.get("PickUpTime"),
+                Reason: formData.get("Reason"),
+                Vehicle: formData.get("Vehicle"),
+                Driver: formData.get("Driver"),
+                PickUpAddress: formData.get("PickUpAddress"),
+                ServiceType: service,
+                BookingDate: new Date().toLocaleString()
+            };
+
+            let bookings = JSON.parse(localStorage.getItem("bookings") || "[]");
+            bookings.push(booking);
+            localStorage.setItem("bookings", JSON.stringify(bookings));
+
+            // ✅ Redirect to confirmation view
+            window.location.href = "/Bus/BookingConfirmed";
+        });
+
+        function generateGUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0,
+                    v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+    });
+</script>

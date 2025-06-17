@@ -1,0 +1,32 @@
+﻿@model U24698505__HW01.Models.RescueBus
+
+@{
+    ViewBag.Title = "SelectService";
+}
+
+<h2>SelectService</h2>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+<div class="container py-5">
+    <h2 class="text-center mb-4">Select a service...</h2>
+    <p class="text-center text-muted mb-5">
+        Lorem ipsum dolor sit amet consectetur adipiscing elit semper dalar elementum tempus hac tellus libero accumsan.
+    </p>
+
+    <div class="row">
+        @foreach (var service in Model.Services)
+        {
+            <div class="col-md-4 mb-4">
+                <a href="@Url.Action("BookingForm", "Bus", new { service = service.Title })" class="text-decoration-none text-dark">
+                    <div class="card h-100 shadow-sm text-center p-3 hover-shadow">
+                        <div class="mb-3">
+                            <img src="@service.IconPath" class="img-fluid rounded mb-3" alt="@service.Title" style="max-height: 100px;" />
+                        </div>
+                        <h5 class="card-title">@service.Title</h5>
+                        <p class="card-text">@service.Description</p>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
