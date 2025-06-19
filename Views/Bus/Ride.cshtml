@@ -1,8 +1,64 @@
-﻿@model U24698505__HW01.Models.RescueBus
-
-@{
+﻿@{
     ViewBag.Title = "Ride";
 }
 
-<h2>Ride</h2>
+<h2 class="text-center text-danger mt-4 mb-4 fw-bold">
+    <i class="bi bi-clock-history" style="font-size: 2rem;"></i> Ride History
+</h2>
 
+<div class="container mb-4 text-end">
+    <button class="btn btn-danger" onclick="clearRideHistory()">Clear Ride History</button>
+</div>
+
+<div class="container" id="rideHistoryContainer">
+    <!-- Bookings will be injected here by JavaScript -->
+</div>
+
+<script>
+    function loadRideHistory() {
+        const container = document.getElementById("rideHistoryContainer");
+        const bookings = JSON.parse(localStorage.getItem("bookings") || "[]");
+
+        container.innerHTML = "";
+
+        if (bookings.length === 0) {
+            container.innerHTML = `
+                <div class="alert alert-info text-center">
+                    No rides have been booked yet.
+                </div>`;
+            return;
+        }
+
+        bookings.forEach(booking => {
+            const card = document.createElement("div");
+            card.className = `card mb-3 ${booking.IsSOS ? "border-danger text-danger" : ""}`;
+            card.style.cursor = "pointer";
+            card.onclick = () => {
+                window.location.href = "/Bus/BookingConfirmed?id=" + booking.BookingID;
+            };
+
+            card.innerHTML = `
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">
+                        ${booking.BookingDate}
+                        ${booking.IsSOS ? '<span class="text-danger">– S.O.S.</span>' : ''}
+                    </h5>
+                    <p class="card-text mb-1"><strong>Booking ID:</strong> ${booking.BookingID}</p>
+                    <p class="card-text mb-1"><strong>Client Name:</strong> ${booking.FullName}</p>
+                    <p class="card-text mb-1"><strong>Ambulance Type:</strong> ${booking.ServiceType}</p>
+                    <p class="card-text"><strong>Pick-Up Address:</strong> ${booking.PickUpAddress}</p>
+                </div>`;
+            container.appendChild(card);
+        });
+    }
+
+    function clearRideHistory() {
+        if (confirm("Are you sure you want to clear all ride history?")) {
+            localStorage.removeItem("bookings");
+            loadRideHistory();
+        }
+    }
+
+    // Load rides on page load
+    document.addEventListener("DOMContentLoaded", loadRideHistory);
+</script>

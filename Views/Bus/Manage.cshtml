@@ -5,206 +5,294 @@
 }
 
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<h2 class="text-center mt-4">Driver and Vehicle Management</h2>
 
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Driver and Vehicle Management</h2>
-
-    <!-- DRIVERS -->
-    <div class="card p-4 mb-5 shadow-sm">
+<div class="container mt-4">
+    <!-- SEARCH + DRIVER SECTION -->
+    <div class="card p-3 shadow-sm mb-4">
         <h4>Drivers</h4>
-        <div class="row mb-3">
-            <div class="col-md-4">
-                <input id="searchName" class="form-control" placeholder="Driver Name" />
-            </div>
-            <div class="col-md-4">
-                <select id="searchService" class="form-select">
-                    <option value="">Service</option>
-                    <option>ALS (Advanced Life Support)</option>
-                    <option>BLS (Basic Life Support)</option>
-                    <option>Patient Transport</option>
-                </select>
-            </div>
-            <div class="col-md-4">
-                <button class="btn btn-success w-100" onclick="searchDrivers()">Search</button>
-            </div>
+        <div class="form-inline mb-3">
+            <input type="text" id="searchName" class="form-control mr-2" placeholder="Driver Name" />
+            <select id="searchService" class="form-control mr-2">
+                <option value="">All Services</option>
+                @foreach (var service in Model.Services)
+                {
+                    <option value="@service.Title">@service.Title</option>
+                }
+            </select>
+            <button id="btnSearch" class="btn btn-success">Search</button>
+            <button id="btnClear" class="btn btn-secondary ml-2">Clear</button>
         </div>
 
-        <table class="table table-bordered align-middle text-center">
-            <thead class="table-light">
+        <button class="btn btn-primary mb-3" onclick="openDriverModal()">Create Driver</button>
+
+        <table class="table table-bordered" id="driverTable">
+            <thead>
                 <tr>
-                    <th>IMAGE</th>
-                    <th>FIRST NAME</th>
-                    <th>LAST NAME</th>
-                    <th>PHONE NUMBER</th>
-                    <th>SERVICE</th>
-                    <th>Controls</th>
+                    <th>Image</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Phone</th>
+                    <th>Service</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-            <tbody id="driverTable">
-                <!-- Driver rows injected by JS -->
+            <tbody>
+                @foreach (var service in Model.Services)
+                {
+                    foreach (var driver in service.Drivers)
+                    {
+                        var nameParts = driver.Name.Split(' ');
+                        var firstName = nameParts[0];
+                        var lastName = nameParts.Length > 1 ? nameParts[1] : "";
+                        <tr data-service="@service.Title" data-name="@firstName @lastName">
+                            <td><img src="@Url.Content("~/Content/Images/Driver/" + driver.ImageFile)" width="40" height="40" class="rounded-circle" /></td>
+                            <td>@firstName</td>
+                            <td>@lastName</td>
+                            <td>@driver.Phone</td>
+                            <td>@service.Title</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editDriver(this)">Update</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteRow(this)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                }
             </tbody>
         </table>
-        <!-- Change this line -->
-        <button class="btn btn-primary" onclick="createDriver()">Create</button>
-
     </div>
 
-    <!-- VEHICLES -->
-    <div class="card p-4 shadow-sm">
+    <!-- VEHICLE SECTION -->
+    <div class="card p-3 shadow-sm">
         <h4>Vehicles</h4>
-        <table class="table table-bordered align-middle text-center">
-            <thead class="table-light">
+        <button class="btn btn-primary mb-3" onclick="openVehicleModal()">Add Vehicle</button>
+        <table class="table table-bordered" id="vehicleTable">
+            <thead>
                 <tr>
-                    <th>IMAGE</th>
-                    <th>TYPE</th>
-                    <th>REGISTRATION</th>
-                    <th>SERVICE</th>
-                    <th>Controls</th>
+                    <th>Image</th>
+                    <th>Type</th>
+                    <th>Registration</th>
+                    <th>Service</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
-            <tbody id="vehicleTable">
-                <!-- Vehicle rows injected by JS -->
+            <tbody>
+                @foreach (var service in Model.Services)
+                {
+                    foreach (var vehicle in service.Vehicles)
+                    {
+                        <tr>
+                            <td><img src="@Url.Content("~/Content/Images/Vehicle/" + vehicle.ImageFile)" width="40" height="40" class="rounded-circle" /></td>
+                            <td>@vehicle.Name</td>
+                            <td>@(string.IsNullOrEmpty(vehicle.Registration) ? "#########" : vehicle.Registration)</td>
+                            <td>@service.Title</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editVehicle(this)">Update</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteRow(this)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                }
             </tbody>
         </table>
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary">Create</button>
-            <button class="btn btn-success" onclick="exportVehicles()">Export</button>
+    </div>
+</div>
+
+<!-- DRIVER MODAL -->
+<div class="modal fade" id="driverModal" tabindex="-1" role="dialog" aria-labelledby="driverModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Driver Form</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <form id="driverForm">
+                    <input type="hidden" id="driverIndex" />
+                    <div class="form-group"><label>First Name</label><input id="driverFirst" class="form-control" required /></div>
+                    <div class="form-group"><label>Last Name</label><input id="driverLast" class="form-control" required /></div>
+                    <div class="form-group"><label>Phone</label><input id="driverPhone" class="form-control" required /></div>
+                    <div class="form-group">
+                        <label>Service</label>
+                        <select id="driverService" class="form-control">
+                            @foreach (var service in Model.Services)
+                            {
+                                <option value="@service.Title">@service.Title</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Image File</label><input id="driverImg" class="form-control" placeholder="e.g., alice.png" /></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="saveDriver()">Confirm</button>
+                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
         </div>
     </div>
 </div>
 
-<script>
-    const drivers = [
-        { image: "https://via.placeholder.com/40", firstName: "Brad", lastName: "Simmons", phone: "+27 76 567 7864", service: "ALS (Advanced Life Support)" },
-        { image: "https://via.placeholder.com/40", firstName: "Jessica", lastName: "Clarkson", phone: "+27 76 567 7864", service: "ALS (Advanced Life Support)" },
-        { image: "https://via.placeholder.com/40", firstName: "Lebo", lastName: "Mokoena", phone: "+27 61 123 4567", service: "BLS (Basic Life Support)" },
-        { image: "https://via.placeholder.com/40", firstName: "Dineo", lastName: "Nkosi", phone: "+27 71 987 6543", service: "Patient Transport" }
-        // Add more demo drivers
-    ];
+<!-- VEHICLE MODAL -->
+<div class="modal fade" id="vehicleModal" tabindex="-1" role="dialog" aria-labelledby="vehicleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Vehicle Form</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span>&times;</span></button>
+            </div>
+            <div class="modal-body">
+                <form id="vehicleForm">
+                    <input type="hidden" id="vehicleIndex" />
+                    <div class="form-group"><label>Type</label><input id="vehicleType" class="form-control" required /></div>
+                    <div class="form-group"><label>Registration</label><input id="vehicleReg" class="form-control" /></div>
+                    <div class="form-group">
+                        <label>Service</label>
+                        <select id="vehicleService" class="form-control">
+                            @foreach (var service in Model.Services)
+                            {
+                                <option value="@service.Title">@service.Title</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Image File</label><input id="vehicleImg" class="form-control" placeholder="e.g., bls1.png" /></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="saveVehicle()">Confirm</button>
+                <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    const vehicles = [
-        { image: "https://via.placeholder.com/40", type: "Type 1", reg: "###111", service: "ALS (Advanced Life Support)" },
-        { image: "https://via.placeholder.com/40", type: "Type 2", reg: "###222", service: "ALS (Advanced Life Support)" },
-        { image: "https://via.placeholder.com/40", type: "BLS Van", reg: "BLS123", service: "BLS (Basic Life Support)" }
-        // Add more demo vehicles
-    ];
+<!-- SCRIPTS -->
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // DRIVERS
+        function openDriverModal() {
+            $('#driverForm')[0].reset();
+            $('#driverIndex').val('');
+            $('#driverModal').modal('show');
+        }
 
-    function createDriver() {
-        const firstName = prompt("Enter first name:");
-        const lastName = prompt("Enter last name:");
-        const phone = prompt("Enter phone number:");
-        const service = prompt("Enter service (ALS, BLS, or Patient Transport):");
+        function editDriver(btn) {
+            const row = btn.closest('tr');
+            $('#driverIndex').val(row.rowIndex);
+            $('#driverFirst').val(row.cells[1].innerText);
+            $('#driverLast').val(row.cells[2].innerText);
+            $('#driverPhone').val(row.cells[3].innerText);
+            $('#driverService').val(row.cells[4].innerText);
+            $('#driverImg').val(row.querySelector("img").src.split('/').pop());
+            $('#driverModal').modal('show');
+        }
 
-        if (firstName && lastName && phone && service) {
-            drivers.push({
-                image: "https://via.placeholder.com/40",
-                firstName,
-                lastName,
-                phone,
-                service
+        function saveDriver() {
+            const table = document.querySelector('#driverTable tbody');
+            const idx = document.getElementById('driverIndex').value;
+            const first = $('#driverFirst').val();
+            const last = $('#driverLast').val();
+            const phone = $('#driverPhone').val();
+            const service = $('#driverService').val();
+            const img = $('#driverImg').val() || "default.png";
+
+            if (idx) {
+                const row = table.rows[idx - 1];
+                row.cells[0].innerHTML = `<img src="/Content/Images/${img}" width="40" height="40" class="rounded-circle" />`;
+                row.cells[1].innerText = first;
+                row.cells[2].innerText = last;
+                row.cells[3].innerText = phone;
+                row.cells[4].innerText = service;
+                row.setAttribute("data-name", `${first} ${last}`);
+                row.setAttribute("data-service", service);
+            } else {
+                const row = table.insertRow();
+                row.setAttribute("data-name", `${first} ${last}`);
+                row.setAttribute("data-service", service);
+                row.innerHTML = `
+                            <td><img src="/Content/Images/${img}" width="40" height="40" class="rounded-circle" /></td>
+                            <td>${first}</td>
+                            <td>${last}</td>
+                            <td>${phone}</td>
+                            <td>${service}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editDriver(this)">Update</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteRow(this)">Delete</button>
+                            </td>`;
+            }
+            $('#driverModal').modal('hide');
+        }
+
+        // VEHICLES
+        function openVehicleModal() {
+            $('#vehicleForm')[0].reset();
+            $('#vehicleIndex').val('');
+            $('#vehicleModal').modal('show');
+        }
+
+        function editVehicle(btn) {
+            const row = btn.closest('tr');
+            $('#vehicleIndex').val(row.rowIndex);
+            $('#vehicleType').val(row.cells[1].innerText);
+            $('#vehicleReg').val(row.cells[2].innerText);
+            $('#vehicleService').val(row.cells[3].innerText);
+            $('#vehicleImg').val(row.querySelector("img").src.split('/').pop());
+            $('#vehicleModal').modal('show');
+        }
+
+        function saveVehicle() {
+            const table = document.querySelector('#vehicleTable tbody');
+            const idx = $('#vehicleIndex').val();
+            const type = $('#vehicleType').val();
+            const reg = $('#vehicleReg').val();
+            const service = $('#vehicleService').val();
+            const img = $('#vehicleImg').val() || "default.png";
+
+            if (idx) {
+                const row = table.rows[idx - 1];
+                row.cells[0].innerHTML = `<img src="/Content/Images/${img}" width="40" height="40" class="rounded-circle" />`;
+                row.cells[1].innerText = type;
+                row.cells[2].innerText = reg;
+                row.cells[3].innerText = service;
+            } else {
+                const row = table.insertRow();
+                row.innerHTML = `
+                            <td><img src="/Content/Images/${img}" width="40" height="40" class="rounded-circle" /></td>
+                            <td>${type}</td>
+                            <td>${reg}</td>
+                            <td>${service}</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm" onclick="editVehicle(this)">Update</button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteRow(this)">Delete</button>
+                            </td>`;
+            }
+            $('#vehicleModal').modal('hide');
+        }
+
+        // DELETE ANY ROW
+        function deleteRow(btn) {
+            btn.closest("tr").remove();
+        }
+
+        // DRIVER SEARCH
+        document.getElementById("btnSearch").addEventListener("click", () => {
+            const name = document.getElementById("searchName").value.toLowerCase();
+            const service = document.getElementById("searchService").value;
+            const rows = document.querySelectorAll("#driverTable tbody tr");
+            rows.forEach(row => {
+                const rowName = row.getAttribute("data-name").toLowerCase();
+                const rowService = row.getAttribute("data-service");
+                const match = (!name || rowName.includes(name)) && (!service || rowService === service);
+                row.style.display = match ? "" : "none";
             });
-            loadTables();
-        }
-    }
-
-
-    function loadTables() {
-        const driverBody = document.getElementById("driverTable");
-        const vehicleBody = document.getElementById("vehicleTable");
-        driverBody.innerHTML = "";
-        vehicleBody.innerHTML = "";
-
-        drivers.forEach((d, i) => {
-            driverBody.innerHTML += `
-        <tr>
-            <td><img src="${d.image}" width="40" /></td>
-            <td>${d.firstName}</td>
-            <td>${d.lastName}</td>
-            <td>${d.phone}</td>
-            <td>${d.service}</td>
-            <td>
-                <button class="btn btn-warning btn-sm" onclick="updateDriver(${i})">Update</button>
-                <button class="btn btn-danger btn-sm" onclick="deleteDriver(${i})">Delete</button>
-            </td>
-        </tr>`;
         });
 
-
-        vehicles.forEach(v => {
-            vehicleBody.innerHTML += `
-                <tr>
-                    <td><img src="${v.image}" width="40" /></td>
-                    <td>${v.type}</td>
-                    <td>${v.reg}</td>
-                    <td>${v.service}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm">Update</button>
-                        <button class="btn btn-danger btn-sm">Delete</button>
-                    </td>
-                </tr>`;
+        document.getElementById("btnClear").addEventListener("click", () => {
+            document.getElementById("searchName").value = "";
+            document.getElementById("searchService").value = "";
+            document.querySelectorAll("#driverTable tbody tr").forEach(r => r.style.display = "");
         });
-    }
-
-    function updateDriver(index) {
-        const d = drivers[index];
-        const firstName = prompt("Edit first name:", d.firstName);
-        const lastName = prompt("Edit last name:", d.lastName);
-        const phone = prompt("Edit phone number:", d.phone);
-        const service = prompt("Edit service:", d.service);
-
-        if (firstName && lastName && phone && service) {
-            drivers[index] = { ...d, firstName, lastName, phone, service };
-            loadTables();
-        }
-    }
-
-    function deleteDriver(index) {
-        if (confirm("Are you sure you want to delete this driver?")) {
-            drivers.splice(index, 1);
-            loadTables();
-        }
-    }
-    function searchDrivers() {
-        const name = document.getElementById("searchName").value.toLowerCase();
-        const service = document.getElementById("searchService").value;
-        const driverBody = document.getElementById("driverTable");
-
-        const filtered = drivers.filter(d =>
-            (name === "" || d.firstName.toLowerCase().includes(name)) &&
-            (service === "" || d.service === service)
-        );
-
-        driverBody.innerHTML = "";
-        filtered.forEach(d => {
-            driverBody.innerHTML += `
-                <tr>
-                    <td><img src="${d.image}" width="40" /></td>
-                    <td>${d.firstName}</td>
-                    <td>${d.lastName}</td>
-                    <td>${d.phone}</td>
-                    <td>${d.service}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm">Update</button>
-                        <button class="btn btn-danger btn-sm">Delete</button>
-                    </td>
-                </tr>`;
-        });
-    }
-
-    function exportVehicles() {
-        let text = "Type\tRegistration\tService\n";
-        vehicles.forEach(v => {
-            text += `${v.type}\t${v.reg}\t${v.service}\n`;
-        });
-
-        const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "vehicles.txt";
-        a.click();
-    }
-
-    loadTables(); // Load on page load
-</script>
+    </script>
+}
 

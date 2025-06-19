@@ -5,7 +5,6 @@
 }
 
 
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
 <div class="container-fluid">
@@ -31,10 +30,45 @@
                 </p>
             </div>
         </div>
-        <div class="col-md-6 grid-cell bg-white">
-            <a href="@Url.Action("Emergency", "Home")">
-                <img src="~/Content/Images/SOS.png" alt="S.O.S." class="sos-img" />
-            </a>
+        <div class="col-md-6 grid-cell bg-white text-center">
+            <button onclick="emergencyBooking()" class="btn btn-danger btn-lg mt-5">
+                <img src="~/Content/Images/SOS.png" alt="S.O.S." class="sos-img" style="max-width: 200px;" />
+            </button>
         </div>
     </div>
 </div>
+
+<script>function emergencyBooking() {
+        fetch('/Bus/GetAllServices')
+            .then(response => response.json())
+            .then(services => {
+                const allDrivers = services.flatMap(s => s.Drivers.map(d => ({ ...d, service: s.Title })));
+                const allVehicles = services.flatMap(s => s.Vehicles.map(v => ({ ...v, service: s.Title })));
+
+                const randomDriver = allDrivers[Math.floor(Math.random() * allDrivers.length)];
+                const randomVehicle = allVehicles[Math.floor(Math.random() * allVehicles.length)];
+
+                const booking = {
+                    BookingID: "S.O.S-" + Math.floor(Math.random() * 10000),
+                    FullName: "Emergency User",
+                    Phone: "N/A",
+                    PickUpTime: "Immediate",
+                    Reason: "S.O.S Emergency",
+                    Vehicle: randomVehicle.Name,
+                    VehicleRegNumber: randomVehicle.Registration,
+                    VehicleImage: randomVehicle.ImageFile,
+                    Driver: randomDriver.Name,
+                    DriverPhone: randomDriver.Phone,
+                    DriverImage: randomDriver.ImageFile,
+                    PickUpAddress: "Unknown",
+                    ServiceType: randomDriver.service,
+                    BookingDate: new Date().toLocaleString()
+                };
+
+                let bookings = JSON.parse(localStorage.getItem("bookings") || "[]");
+                bookings.push(booking);
+                localStorage.setItem("bookings", JSON.stringify(bookings));
+
+                window.location.href = "/Bus/BookingConfirmed";
+            });
+    }</script>
